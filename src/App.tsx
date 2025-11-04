@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useCallback } from 'react';
 import GradientEditor from './components/GradientEditor';
 import CodeDisplay from './components/GradientEditor/features/CodeDisplay';
 import { Stop, GradientState } from './components/GradientEditor/types';
@@ -13,6 +13,19 @@ export default function App() {
       direction: 90
     });
     const [selectedStopId, setSelectedStopId] = useState<string | undefined>(undefined);
+
+    const handleStopPositionChange = useCallback((stopId: string, position: number) => {
+      setGradientState(prev => {
+        const updatedStops = prev.stops.map(stop => 
+          stop.id === stopId ? { ...stop, position } : stop
+        );
+        setPresetStops(updatedStops);
+        return {
+          ...prev,
+          stops: updatedStops
+        };
+      });
+    }, []);
 
     return (
         <div className="app-root">
@@ -37,6 +50,7 @@ export default function App() {
                     <LinearGradientSlider 
                       stops={gradientState.stops}
                       selectedStopId={selectedStopId}
+                      onStopPositionChange={handleStopPositionChange}
                     />
                   </div>
                 )}
