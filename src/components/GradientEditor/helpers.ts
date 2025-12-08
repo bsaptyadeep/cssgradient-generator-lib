@@ -67,6 +67,107 @@ export const defaultStops: Stop[] = [
   { id: '2', color: '#0000ff', position: 100, opacity: 1 },
 ];
 
+/**
+ * Interpolates color at a specific position between gradient stops
+ * @param stops - Array of gradient stops
+ * @param position - Position percentage (0-100) where color should be interpolated
+ * @returns Interpolated hex color string
+ */
+export const interpolateColorAtPosition = (stops: Stop[], position: number): string => {
+  if (stops.length === 0) return '#808080';
+  
+  const sorted = [...stops].sort((a, b) => a.position - b.position);
+  
+  // If position is before or at first stop
+  if (position <= sorted[0].position) {
+    return sorted[0].color;
+  }
+  
+  // If position is after or at last stop
+  if (position >= sorted[sorted.length - 1].position) {
+    return sorted[sorted.length - 1].color;
+  }
+  
+  // Find the two stops that bracket the position
+  let leftStop = sorted[0];
+  let rightStop = sorted[sorted.length - 1];
+  
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (sorted[i].position <= position && sorted[i + 1].position >= position) {
+      leftStop = sorted[i];
+      rightStop = sorted[i + 1];
+      break;
+    }
+  }
+  
+  // Calculate interpolation factor
+  const range = rightStop.position - leftStop.position;
+  const factor = range === 0 ? 0 : (position - leftStop.position) / range;
+  
+  // Parse hex colors to RGB
+  const leftRgb = {
+    r: parseInt(leftStop.color.substring(1, 3), 16),
+    g: parseInt(leftStop.color.substring(3, 5), 16),
+    b: parseInt(leftStop.color.substring(5, 7), 16),
+  };
+  
+  const rightRgb = {
+    r: parseInt(rightStop.color.substring(1, 3), 16),
+    g: parseInt(rightStop.color.substring(3, 5), 16),
+    b: parseInt(rightStop.color.substring(5, 7), 16),
+  };
+  
+  // Interpolate RGB values
+  const r = Math.round(leftRgb.r + (rightRgb.r - leftRgb.r) * factor);
+  const g = Math.round(leftRgb.g + (rightRgb.g - leftRgb.g) * factor);
+  const b = Math.round(leftRgb.b + (rightRgb.b - leftRgb.b) * factor);
+  
+  // Convert back to hex
+  const toHex = (n: number) => n.toString(16).padStart(2, '0');
+  return `#${toHex(r)}${toHex(g)}${toHex(b)}`;
+};
+
+/**
+ * Interpolates opacity at a specific position between gradient stops
+ * @param stops - Array of gradient stops
+ * @param position - Position percentage (0-100) where opacity should be interpolated
+ * @returns Interpolated opacity value (0-1)
+ */
+export const interpolateOpacityAtPosition = (stops: Stop[], position: number): number => {
+  if (stops.length === 0) return 1;
+  
+  const sorted = [...stops].sort((a, b) => a.position - b.position);
+  
+  // If position is before or at first stop
+  if (position <= sorted[0].position) {
+    return sorted[0].opacity;
+  }
+  
+  // If position is after or at last stop
+  if (position >= sorted[sorted.length - 1].position) {
+    return sorted[sorted.length - 1].opacity;
+  }
+  
+  // Find the two stops that bracket the position
+  let leftStop = sorted[0];
+  let rightStop = sorted[sorted.length - 1];
+  
+  for (let i = 0; i < sorted.length - 1; i++) {
+    if (sorted[i].position <= position && sorted[i + 1].position >= position) {
+      leftStop = sorted[i];
+      rightStop = sorted[i + 1];
+      break;
+    }
+  }
+  
+  // Calculate interpolation factor
+  const range = rightStop.position - leftStop.position;
+  const factor = range === 0 ? 0 : (position - leftStop.position) / range;
+  
+  // Interpolate opacity
+  return leftStop.opacity + (rightStop.opacity - leftStop.opacity) * factor;
+};
+
 export const gradientReducer = (state: GradientState, action: Action): GradientState => {
   switch (action.type) {
     case 'ADD_STOP': {

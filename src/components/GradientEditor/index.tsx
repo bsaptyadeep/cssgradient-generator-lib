@@ -1,7 +1,8 @@
-import React, { useReducer, useEffect, useCallback } from 'react';
+import React, { useReducer, useEffect, useCallback, useState } from 'react';
 import type { GradientEditorProps, Stop } from './types';
-import { defaultStops, gradientReducer, stopsToCssString } from './helpers';
+import { defaultStops, gradientReducer, stopsToCssString, generateId } from './helpers';
 import StopRow from './features/StopRow';
+import LinearGradientSlider from './features/LinearGradientSlider';
 import './GradientEditor.css';
 
 /**
@@ -18,6 +19,7 @@ const GradientEditor = ({
     stops: initialStops,
     direction: initialDirection,
   });
+  const [selectedStopId, setSelectedStopId] = useState<string | undefined>(undefined);
 
   // Update state when preset is loaded
   useEffect(() => {
@@ -48,6 +50,19 @@ const GradientEditor = ({
     dispatch({ type: 'ADD_STOP' });
   };
 
+  const handleSliderAddStop = useCallback((stop: Omit<Stop, 'id'>) => {
+    const newStop: Stop = {
+      id: generateId(),
+      ...stop
+    };
+    dispatch({ type: 'SET_STOPS', stops: [...state.stops, newStop] });
+    setSelectedStopId(newStop.id);
+  }, [state.stops]);
+
+  const handleSliderPositionChange = useCallback((stopId: string, position: number) => {
+    dispatch({ type: 'UPDATE_STOP', id: stopId, updates: { position } });
+  }, []);
+
   const handleDirectionChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const value = parseFloat(e.target.value) || 0;
     dispatch({ type: 'SET_DIRECTION', direction: value });
@@ -63,6 +78,13 @@ const GradientEditor = ({
   return (
     <div className="gradient-editor">
         <div className="gradient-editor__preview" style={gradientStyle} role="img" aria-label="Gradient preview" />
+
+        <LinearGradientSlider
+          stops={state.stops}
+          selectedStopId={selectedStopId}
+          onStopPositionChange={handleSliderPositionChange}
+          onAddStop={handleSliderAddStop}
+        />
 
         <div className="gradient-editor__direction">
           <label className="gradient-editor__direction-label">
